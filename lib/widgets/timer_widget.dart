@@ -70,14 +70,14 @@ class _TimerWidgetState extends State<TimerWidget> {
           reduceTracksLength();
         });
       } else {
-        _timer.cancel(); // Stop the timer when the duration ends
+        _timer.cancel();
       }
     });
   }
 
   @override
   void dispose() {
-    _timer.cancel(); // Always cancel the timer to avoid memory leaks
+    _timer.cancel();
     super.dispose();
   }
 
@@ -89,18 +89,24 @@ class _TimerWidgetState extends State<TimerWidget> {
         builder: (BuildContext context, BoxConstraints constraints) {
           // Initial dimensions based on constraints
           double currentHeight = constraints.maxHeight;
-          double currentWidth = constraints.maxWidth;
-          double totalPixelToTravel = currentHeight * 2 + currentWidth * 2;
+          double currentWidth = constraints.maxWidth - 40;
+          double totalPixelToTravel = (currentHeight + currentWidth) * 2;
 
           final pxConstant = widget.duration.inSeconds / totalPixelToTravel;
-          print(pxConstant);
 
           final ht = pxConstant * currentHeight;
           final wt = pxConstant * currentWidth;
 
           final pxReduction = 1 / pxConstant;
+
           //!Might new need to change each time on screen adjustment so put inside the if
           decrementPx = pxReduction;
+          print(totalPixelToTravel / pxReduction);
+          print('Track4Length $track4Length');
+          print('Track3Length $track3Length');
+          print('Track2Length $track2Length');
+          print('Track1Length $track1Length');
+          print('ElapsedSeconds $_elapsedSeconds');
 
           //On initial launch set track lengths if any track lengths is null
           // if (t1 == 0) {
@@ -110,9 +116,9 @@ class _TimerWidgetState extends State<TimerWidget> {
             t2 = wt;
             t1 = ht;
             track4Length = currentWidth;
-            track3Length = currentHeight - 40;
+            track3Length = currentHeight;
             track2Length = currentWidth;
-            track1Length = currentHeight - 40;
+            track1Length = currentHeight;
             valuesAssigned = true;
           }
           // }
@@ -124,6 +130,7 @@ class _TimerWidgetState extends State<TimerWidget> {
                 alignment: Alignment.topLeft,
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
+                  margin: const EdgeInsets.symmetric(horizontal: 20),
                   height: 20,
                   width: track4Length,
                   color: Colors.white,
@@ -134,8 +141,7 @@ class _TimerWidgetState extends State<TimerWidget> {
                 alignment: Alignment.bottomLeft,
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
-                  margin: const EdgeInsets.symmetric(vertical: 20),
-                  color: Colors.green,
+                  color: Colors.white,
                   width: 20,
                   height: track3Length,
                 ),
@@ -145,7 +151,6 @@ class _TimerWidgetState extends State<TimerWidget> {
                 alignment: Alignment.topRight,
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
-                  margin: const EdgeInsets.symmetric(vertical: 20),
                   color: Colors.white,
                   width: 20,
                   height: track1Length,
@@ -156,9 +161,10 @@ class _TimerWidgetState extends State<TimerWidget> {
                 alignment: Alignment.bottomRight,
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
+                  margin: const EdgeInsets.symmetric(horizontal: 20),
                   height: 20,
                   width: track2Length,
-                  color: Colors.red,
+                  color: Colors.white,
                 ),
               ),
               GestureDetector(
@@ -171,14 +177,21 @@ class _TimerWidgetState extends State<TimerWidget> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text(
-                          '00:00:00',
-                          style: TextStyle(
+                        Text(
+                          (widget.duration - Duration(seconds: _elapsedSeconds))
+                              .toString()
+                              .split('.')
+                              .first
+                              .padLeft(8, '0'),
+                          style: const TextStyle(
                             fontSize: 60,
                             color: Colors.white,
                           ),
                         ),
-                        Text('$_elapsedSeconds')
+                        Text(
+                          '$_elapsedSeconds',
+                          style: const TextStyle(color: Colors.white),
+                        ),
                       ],
                     ),
                   ),

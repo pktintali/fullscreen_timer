@@ -84,8 +84,8 @@ class DurationPickerWidgetState extends State<DurationPickerWidget> {
                 context,
                 MaterialPageRoute(
                   builder: (context) => TimerWidget(
-                    duration: duration,
-                  ),
+                      duration: duration,
+                      ),
                 ),
               );
             },
