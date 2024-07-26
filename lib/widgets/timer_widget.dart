@@ -7,67 +7,20 @@ class TimerWidget extends StatefulWidget {
   const TimerWidget({super.key, required this.duration});
 
   @override
-  State<TimerWidget> createState() => _TimerWidgetState();
+  TimerWidgetState createState() => TimerWidgetState();
 }
 
-class _TimerWidgetState extends State<TimerWidget> {
+class TimerWidgetState extends State<TimerWidget> {
   late Timer _timer;
-  int _elapsedSeconds = 0;
-  double t4 = 0;
-  double t3 = 0;
-  double t2 = 0;
-  double t1 = 0;
-  double decrementPx = 0;
-  double track4Length = 0;
-  double track3Length = 0;
-  double track2Length = 0;
-  double track1Length = 0;
-  bool valuesAssigned = false;
-
-  void reduceTracksLength() {
-    if (t4 > 0 && track4Length > 0) {
-      if (track4Length >= decrementPx) {
-        track4Length = track4Length - decrementPx;
-      } else {
-        track4Length = 0;
-        track3Length = track3Length - (track4Length - decrementPx).abs();
-      }
-    } else if (t3 > 0 && track3Length > 0) {
-      if (track3Length >= decrementPx) {
-        track3Length = track3Length - decrementPx;
-      } else {
-        track3Length = 0;
-        track2Length = track2Length - (track3Length - decrementPx).abs();
-      }
-    } else if (t2 > 0 && track2Length > 0) {
-      if (track2Length >= decrementPx) {
-        track2Length = track2Length - decrementPx;
-      } else {
-        track2Length = 0;
-        track1Length = track1Length - (track2Length - decrementPx).abs();
-      }
-    } else if (t1 > 0 && track1Length > 0) {
-      if (track1Length >= decrementPx) {
-        track1Length = track1Length - decrementPx;
-      } else {
-        track1Length = 0;
-      }
-    } else {
-      track1Length = 0;
-      track2Length = 0;
-      track3Length = 0;
-      track4Length = 0;
-    }
-  }
+  int _elapsedMilliseconds = 0;
 
   @override
   void initState() {
     super.initState();
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_elapsedSeconds < widget.duration.inSeconds) {
+    _timer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
+      if (_elapsedMilliseconds < widget.duration.inMilliseconds) {
         setState(() {
-          _elapsedSeconds++;
-          reduceTracksLength();
+          _elapsedMilliseconds += 100;
         });
       } else {
         _timer.cancel();
@@ -85,121 +38,117 @@ class _TimerWidgetState extends State<TimerWidget> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: LayoutBuilder(
-        builder: (BuildContext context, BoxConstraints constraints) {
-          // Initial dimensions based on constraints
-          double currentHeight = constraints.maxHeight;
-          double currentWidth = constraints.maxWidth - 40;
-          double totalPixelToTravel = (currentHeight + currentWidth) * 2;
+      body: Center(
+        child: LayoutBuilder(
+          builder: (BuildContext context, BoxConstraints constraints) {
+            double maxWidth = constraints.maxWidth;
+            double maxHeight = constraints.maxHeight;
+            double trackWidth = 20.0; // Width of the progress bar
+            double totalPerimeter = 2 * (maxWidth + maxHeight - 2 * trackWidth);
 
-          final pxConstant = widget.duration.inSeconds / totalPixelToTravel;
+            double progress =
+                (_elapsedMilliseconds / widget.duration.inMilliseconds) *
+                    totalPerimeter;
 
-          final ht = pxConstant * currentHeight;
-          final wt = pxConstant * currentWidth;
+            double left = 0, top = 0, right = 0, bottom = 0;
 
-          final pxReduction = 1 / pxConstant;
+            if (progress <= maxWidth) {
+              top = progress;
+            } else if (progress <= maxWidth + maxHeight - trackWidth) {
+              top = maxWidth;
+              right = progress - maxWidth;
+            } else if (progress <= 2 * maxWidth + maxHeight - 2 * trackWidth) {
+              top = maxWidth;
+              right = maxHeight;
+              bottom = (progress - (maxWidth + maxHeight)) + trackWidth;
+            } else {
+              top = maxWidth;
+              right = maxHeight;
+              bottom = maxWidth;
+              left = (progress - (2 * maxWidth + maxHeight)) + 2 * trackWidth;
+            }
 
-          //!Might new need to change each time on screen adjustment so put inside the if
-          decrementPx = pxReduction;
-          print(totalPixelToTravel / pxReduction);
-          print('Track4Length $track4Length');
-          print('Track3Length $track3Length');
-          print('Track2Length $track2Length');
-          print('Track1Length $track1Length');
-          print('ElapsedSeconds $_elapsedSeconds');
-
-          //On initial launch set track lengths if any track lengths is null
-          // if (t1 == 0) {
-          if (!valuesAssigned) {
-            t4 = wt;
-            t3 = ht;
-            t2 = wt;
-            t1 = ht;
-            track4Length = currentWidth;
-            track3Length = currentHeight;
-            track2Length = currentWidth;
-            track1Length = currentHeight;
-            valuesAssigned = true;
-          }
-          // }
-
-          return Stack(
-            children: [
-              Align(
-                key: const Key('track4'),
-                alignment: Alignment.topLeft,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  margin: const EdgeInsets.symmetric(horizontal: 20),
-                  height: 20,
-                  width: track4Length,
-                  color: Colors.white,
+            return Stack(
+              children: [
+                Align(
+                  key: const Key('track4'),
+                  alignment: Alignment.topLeft,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    height: 20,
+                    width: top,
+                    color: Colors.white,
+                  ),
                 ),
-              ),
-              Align(
-                key: const Key('track3'),
-                alignment: Alignment.bottomLeft,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  color: Colors.white,
-                  width: 20,
-                  height: track3Length,
+                Align(
+                  key: const Key('track3'),
+                  alignment: Alignment.bottomLeft,
+                  child: AnimatedContainer(
+                    margin: const EdgeInsets.symmetric(vertical: 20),
+                    duration: const Duration(milliseconds: 200),
+                    color: Colors.white,
+                    width: 20,
+                    height: left,
+                  ),
                 ),
-              ),
-              Align(
-                key: const Key('track1'),
-                alignment: Alignment.topRight,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  color: Colors.white,
-                  width: 20,
-                  height: track1Length,
+                Align(
+                  key: const Key('track1'),
+                  alignment: Alignment.topRight,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    margin: const EdgeInsets.only(top: 20),
+                    color: Colors.white,
+                    width: 20,
+                    height: right,
+                  ),
                 ),
-              ),
-              Align(
-                key: const Key('track2'),
-                alignment: Alignment.bottomRight,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  margin: const EdgeInsets.symmetric(horizontal: 20),
-                  height: 20,
-                  width: track2Length,
-                  color: Colors.white,
+                Align(
+                  key: const Key('track2'),
+                  alignment: Alignment.bottomRight,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    margin: const EdgeInsets.only(right: 20),
+                    height: 20,
+                    width: bottom,
+                    color: Colors.white,
+                  ),
                 ),
-              ),
-              GestureDetector(
-                onDoubleTap: () {
-                  Navigator.pop(context);
-                },
-                child: Container(
-                  margin: const EdgeInsets.all(20),
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          (widget.duration - Duration(seconds: _elapsedSeconds))
-                              .toString()
-                              .split('.')
-                              .first
-                              .padLeft(8, '0'),
-                          style: const TextStyle(
-                            fontSize: 60,
-                            color: Colors.white,
+                GestureDetector(
+                  onDoubleTap: () {
+                    Navigator.pop(context);
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.all(20),
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            (widget.duration -
+                                    Duration(
+                                        seconds: _elapsedMilliseconds ~/ 1000))
+                                .toString()
+                                .split('.')
+                                .first
+                                .padLeft(8, '0'),
+                            style: const TextStyle(
+                              fontSize: 60,
+                              color: Colors.white,
+                            ),
                           ),
-                        ),
-                        Text(
-                          '$_elapsedSeconds',
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                      ],
+                          Text(
+                            '${_elapsedMilliseconds ~/ 1000}',
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
-          );
-        },
+              ],
+            );
+          },
+        ),
       ),
     );
   }
