@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 
 class TimerWidget extends StatefulWidget {
   final Duration duration;
+  final bool reverse;
 
-  const TimerWidget({super.key, required this.duration});
+  const TimerWidget({super.key, required this.duration, this.reverse = false});
 
   @override
   TimerWidgetState createState() => TimerWidgetState();
@@ -43,7 +44,7 @@ class TimerWidgetState extends State<TimerWidget> {
           builder: (BuildContext context, BoxConstraints constraints) {
             double maxWidth = constraints.maxWidth;
             double maxHeight = constraints.maxHeight;
-            double trackWidth = 20.0; // Width of the progress bar
+            double trackWidth = 20.0;
             double totalPerimeter = 2 * (maxWidth + maxHeight - 2 * trackWidth);
 
             double progress =
@@ -52,20 +53,46 @@ class TimerWidgetState extends State<TimerWidget> {
 
             double left = 0, top = 0, right = 0, bottom = 0;
 
-            if (progress <= maxWidth) {
-              top = progress;
-            } else if (progress <= maxWidth + maxHeight - trackWidth) {
-              top = maxWidth;
-              right = progress - maxWidth;
-            } else if (progress <= 2 * maxWidth + maxHeight - 2 * trackWidth) {
-              top = maxWidth;
-              right = maxHeight;
-              bottom = (progress - (maxWidth + maxHeight)) + trackWidth;
+            if (widget.reverse) {
+              if (progress <= maxHeight - 2 * trackWidth) {
+                right = maxHeight - trackWidth;
+                bottom = maxWidth - trackWidth;
+                top = maxWidth;
+                left = maxHeight - progress - 2 * trackWidth;
+              } else if (progress <= maxWidth + maxHeight - 3 * trackWidth) {
+                right = maxHeight - trackWidth;
+                left = 0;
+                top = maxWidth;
+                bottom = maxHeight + maxWidth - progress - 3 * trackWidth;
+              } else if (progress <=
+                  maxWidth + 2 * maxHeight - 4 * trackWidth) {
+                bottom = 0;
+                left = 0;
+                top = maxWidth;
+                right = 2 * maxHeight + maxWidth - progress - 4 * trackWidth;
+              } else {
+                bottom = 0;
+                left = 0;
+                right = 0;
+                top = 2 * maxHeight + 2 * maxWidth - progress - 4 * trackWidth;
+              }
             } else {
-              top = maxWidth;
-              right = maxHeight;
-              bottom = maxWidth;
-              left = (progress - (2 * maxWidth + maxHeight)) + 2 * trackWidth;
+              if (progress <= maxWidth) {
+                top = progress;
+              } else if (progress <= maxWidth + maxHeight - trackWidth) {
+                top = maxWidth;
+                right = progress - maxWidth;
+              } else if (progress <=
+                  2 * maxWidth + maxHeight - 2 * trackWidth) {
+                top = maxWidth;
+                right = maxHeight;
+                bottom = (progress - (maxWidth + maxHeight)) + trackWidth;
+              } else {
+                top = maxWidth;
+                right = maxHeight;
+                bottom = maxWidth;
+                left = (progress - (2 * maxWidth + maxHeight)) + 2 * trackWidth;
+              }
             }
 
             return Stack(
@@ -124,21 +151,25 @@ class TimerWidgetState extends State<TimerWidget> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            (widget.duration -
-                                    Duration(
+                            widget.reverse
+                                ? (widget.duration -
+                                        Duration(
+                                            seconds:
+                                                _elapsedMilliseconds ~/ 1000))
+                                    .toString()
+                                    .split('.')
+                                    .first
+                                    .padLeft(8, '0')
+                                : (Duration(
                                         seconds: _elapsedMilliseconds ~/ 1000))
-                                .toString()
-                                .split('.')
-                                .first
-                                .padLeft(8, '0'),
+                                    .toString()
+                                    .split('.')
+                                    .first
+                                    .padLeft(8, '0'),
                             style: const TextStyle(
                               fontSize: 60,
                               color: Colors.white,
                             ),
-                          ),
-                          Text(
-                            '${_elapsedMilliseconds ~/ 1000}',
-                            style: const TextStyle(color: Colors.white),
                           ),
                         ],
                       ),
